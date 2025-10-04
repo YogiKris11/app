@@ -10,27 +10,39 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout your repo
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Step 2: Set up Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
+      # Step 3: Install dependencies
       - name: Install dependencies
-        working-directory: .
         run: npm install
 
+      # Step 4: Build Next.js app
+      # (this will create the .next/ and out/ folders)
       - name: Build Next.js app
-        working-directory: .
         run: npm run build && npm run export
 
+      # Step 5: Install Firebase CLI
       - name: Install Firebase CLI
         run: npm install -g firebase-tools
 
+      # Step 6: Authenticate Firebase using service account
+      - name: Set up Firebase authentication
+        run: |
+          echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT_STUDIO_7578418568_F8D83 }}" > "${HOME}/firebase-key.json"
+          firebase login:ci --no-localhost || true
+          firebase use studio-7578418568-f8d83 --token "$(firebase login:ci || true)" || true
+
+      # Step 7: Deploy to Firebase Hosting (production)
       - name: Deploy to Firebase Hosting
-        run: firebase deploy --only hosting --non-interactive --project studio-7578418568-f8d83
         env:
-          FIREBASE_SERVICE_ACCOUNT_STUDIO_7578418568_F8D83: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_STUDIO_7578418568_F8D83 }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/firebase-key.json
+        run: |
+          firebase deploy --only hosting --project studio-7578418568-f8d83 --non-interactive
