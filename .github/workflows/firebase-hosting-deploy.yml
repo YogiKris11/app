@@ -19,9 +19,11 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
+        working-directory: .
         run: npm install
 
       - name: Build Next.js app
+        working-directory: .
         run: npm run build && npm run export
 
       - name: Install Firebase CLI
